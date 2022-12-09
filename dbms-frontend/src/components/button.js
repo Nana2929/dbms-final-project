@@ -4,8 +4,17 @@ class MyButton extends Component{
       super(props);
       this.handleClick = this.handleClick.bind(this);
     }
+    pressAlert = async () => {
+      await fetch('http://localhost:8000/todo/', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command:this.props.name  })
+      })
+    }
+
     handleClick = () => {
-      console.log("this is" + this.props.name);
+      this.pressAlert();
+      console.log("this is " + this.props.name);
     };
     render() {
       return (
@@ -17,3 +26,5 @@ class MyButton extends Component{
   )}
 }
 export default MyButton;
+
+
