@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
+from .database import get_by_query, get_by_manual_query
+import asyncio
 
 app = FastAPI()
 
@@ -36,10 +37,24 @@ app.add_middleware(
 async def get_todos() -> dict:
     return { "data": datarows }
 
+
 @app.post("/todo", tags=["todos"])
-async def recv_command(command: dict) -> dict:
-    cmd = command["command"]
-    print(f'{cmd} button is pressed.' )
-    return {
-        "data": { f"Command {cmd} Received" }
-    }
+async def post_todos(request: dict) -> dict:
+    btn_type = request["btn_type"]
+    loop = asyncio.get_event_loop()
+    response = await get_by_query(loop=loop, btn_type=btn_type)
+    if response:
+        return {"data": response}
+    raise HTTPException(400, "Something went wrong")
+
+
+@app.post("/todo_q", tags=["todos"])
+async def post_todos(request: dict) -> dict:
+    query = request["manual_query"]
+    loop = asyncio.get_event_loop()
+    try:
+        response = await get_by_manual_query(loop=loop, query=query)
+    except:
+        raise HTTPException(400, "Something went wrong")
+
+    return {"data": response}
