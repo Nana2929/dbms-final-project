@@ -1,24 +1,63 @@
-import React, { Component, useEffect, useState } from "react";
+import React, { useEffect, useState, createContext } from "react";
+import axios from "axios";
 import Header from "../components/header";
-import Buttons from "../components/button.layout";
 import Query from "../components/query";
-import STable from "../components/static.table";
-import DTable from "../components/table";
 import DBTable from "../components/db_table";
-
-const DBAppContext = React.createContext({
-    entries:[], fetchEntries:()=>{}
-})
-
+import Button from "../components/button";
+import {btn1, btn2, btn3} from "../components/button.style";
+import {DBAppContext} from "../components/AppContext";
+import {buttons} from "../components/button.layout";
+import {ErrorBoundary} from "../components/error.boundary"
 
 export default function DBApp(){
     const [entries, setEntries] = useState([]);
+    const [pressedBtn, setPressedBtn] = useState('');
+    const [reset, setReset] = useState(false);
+    // equivalent example in class component
+    // setPressedBtn = pressedBtn => {
+    //     this.setState({pressedBtn: pressedBtn});
+    // }
+
     const fetchEntries = async()=>{
         const response = await fetch('http://localhost:8000/todo')
         const entries_ = await response.json()
-        setEntries(entries_.data) // naming entries_.data to entries
+        setEntries(entries_.data)
     }
-    console.log('!!', entries);
+
+    useEffect(() => {
+        fetchEntries()
+    }, [reset])
+
+    const handleClick=(btn_type)=>{
+        axios.post('http://localhost:8000/todo',
+        {'btn_type': btn_type})
+        .then(response => response.data)
+        .then(data => {
+            console.log(data)
+            setEntries(data.data);
+            setPressedBtn(btn_type);
+            }
+        )
+    }
+
+    const handleSubmit=(query)=>{
+        console.log(query)
+        axios.post('http://localhost:8000/todo_q',
+        {'manual_query': query})
+        .then(response => response.data)
+        .then(data => {
+            setEntries(data.data);
+            setPressedBtn('manual_query');
+            }
+        )
+        .catch(error => {
+            // fetchEntries()
+            setEntries([])
+            console.log(error)
+            alert("Invalid Query")
+        })
+    }
+
     if (entries.length > 0){
         var sampledata = entries[0];
         var Columns = new Array();
@@ -36,51 +75,34 @@ export default function DBApp(){
         }
         RowsList.push(row);
     }
+
+    console.log('entries', entries)
     console.log('columns', Columns);
     console.log('rows', RowsList);
-    useEffect(() => {
-        fetchEntries()
-    }, [])
+
     return (
-            <div id="root">
-            <div class="absolute text-amber-100 bg-sky-900 top-0 right-0 bottom-0 left-0 w-full h-full overflow-hidden bg-fixed">
-                <div class="flex items-center"></div>
-                <Header text="IIU Student Mangement System"
-                    subtext="Supported by react"></Header>
-                <Query></Query>
-                <Buttons></Buttons>
-                {/* <STable></STable> */}
-                {/* <DTable></DTable> */}
-                <DBTable columnIndex={Columns} rowsList={RowsList}></DBTable>
+            <div id="root" class="pt-10 text-amber-100 bg-sky-900 overflow-hidden">
+                <Header
+                    text="IIU Student Management System"
+                    subtext="Supported by react">
+                </Header>
 
-                {/* {
-                entries.map((row) => (
-                     <RowHelper item={row.item} id={row.id} fetchTodos={fetchEntries} />
-                    ))
-                } */}
+                <DBAppContext.Provider value= {{handleClick, handleSubmit}}>
 
-                {/* <section className="todo-app__main">
-                <input type="text" value = {this.state.inputValue} onKeyPress = {this.handlePressEnter}
-                onChange = {this.handleInputChange} // setting arg from defaultValue to value acheives 'press enter and clean the input field'
-                placeholder="What needs to be done today?" className="todo-app__input"></input>
-                {this.renderEntries()}
-                </section>
-                {this.state.todos.length > 0 ? this.renderFooter(): null} */}
+                <Query />
+
+                <div class="px-5 mx-12 h-56 grid grid-cols-4 gap-4 content-start">
+                {
+                    buttons.map(({name, styleCmpt}) =>
+                    <Button name={name} StyleCmpt={styleCmpt === 'btn1' ? btn1 : (styleCmpt === 'btn2' ? btn2 : btn3)}/>)
+                }
+
                 </div>
-            </div>)
-    }
+                {/* <ErrorBoundary> */}
+                <DBTable columnIndex={Columns} rowsList={RowsList}></DBTable>
+                {/* </ErrorBoundary> */}
+                </DBAppContext.Provider>
+                </div>
 
-// class DBApp extends Component {
-//     constructor(props){
-//         super(props) // all react component classes that have a constructor should have a super(props)
-//         this.state = {
-//         };
-//     }
-//     render(){
-//         window.state = this.state;
-//         return (
-//         );
-
-//     }
-// }
-// export default DBApp;
+            )
+}
