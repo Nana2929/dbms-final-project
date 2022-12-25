@@ -64,11 +64,12 @@ async def post_todos(request: dict) -> dict:
     loop = asyncio.get_event_loop()
     query_type = query.split()[0].upper()
     print(query_type)
-    if query_type in MODTYPES:
-        return await get_by_modify(loop=loop,
-                                    query_type=query_type)
     try:
-        response = await get_by_manual_query(loop=loop,
+        if query_type in MODTYPES:
+            response = await get_by_modify(loop=loop,
+                                           btn_type=query_type)
+        else:
+            response = await get_by_manual_query(loop=loop,
                                             query=query)
     except:
         raise HTTPException(400, "Something went wrong")

@@ -45,18 +45,16 @@ QueryMap = {
         """
         SELECT *
         FROM Department
+        WHERE Dname = \'NTU EE\';
         """, ()
     ),
     'IN': (
         """
-        SELECT D.Dname,
-            COUNT(
-        *) FROM
-                Department as D,
-                Classroom as C
-            WHERE D.Dno = C.Dnumber
-            GROUP BY C.Dnumber
-            HAVING COUNT(*) >= 2;
+        SELECT P.name FROM Professor as P
+	    WHERE P.Specialty IN
+	    (\'Biology Statistics, Survival Analysis\',
+		\'Digital\',
+		\'Natural Language Processing, Data Mining, Information Retrieval\');
         """, ()
     ),
     'NOT IN': (
