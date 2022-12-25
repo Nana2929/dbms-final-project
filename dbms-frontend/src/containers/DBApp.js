@@ -7,11 +7,10 @@ import Button from "../components/button";
 import {btn1, btn2, btn3} from "../components/button.style";
 import {DBAppContext} from "../components/AppContext";
 import {buttons} from "../components/button.layout";
-import {ErrorBoundary} from "../components/error.boundary"
+// import {ErrorBoundary} from "../components/error.boundary" // for debug
 
 export default function DBApp(){
     const [entries, setEntries] = useState([]);
-    const [pressedBtn, setPressedBtn] = useState('');
     const [reset, setReset] = useState(false);
     // equivalent example in class component
     // setPressedBtn = pressedBtn => {
@@ -35,7 +34,6 @@ export default function DBApp(){
         .then(data => {
             console.log(data)
             setEntries(data.data);
-            setPressedBtn(btn_type);
             }
         )
     }
@@ -47,11 +45,9 @@ export default function DBApp(){
         .then(response => response.data)
         .then(data => {
             setEntries(data.data);
-            setPressedBtn('manual_query');
             }
         )
         .catch(error => {
-            // fetchEntries()
             setEntries([])
             console.log(error)
             alert("Invalid Query")

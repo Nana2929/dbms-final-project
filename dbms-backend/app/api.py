@@ -1,7 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .database import get_by_query, get_by_manual_query
+from .database import get_by_query, get_by_modify, get_by_manual_query
 import asyncio
+'''
+Routers for FastAPI
+'''
 
 app = FastAPI()
 
@@ -20,7 +23,6 @@ datarows = [
     }
 ]
 
-
 origins = [
     "http://localhost:3000",
     "localhost:3000"
@@ -33,6 +35,8 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+MODTYPES = ['DELETE', 'INSERT', 'UPDATE']
+
 @app.get("/todo", tags=["todos"])
 async def get_todos() -> dict:
     return { "data": datarows }
@@ -42,7 +46,13 @@ async def get_todos() -> dict:
 async def post_todos(request: dict) -> dict:
     btn_type = request["btn_type"]
     loop = asyncio.get_event_loop()
-    response = await get_by_query(loop=loop, btn_type=btn_type)
+    if btn_type in MODTYPES:
+        response = await get_by_modify(loop=loop,
+                                    btn_type=btn_type)
+    else:
+        response = await get_by_query(loop=loop,
+                                    btn_type=btn_type)
+
     if response:
         return {"data": response}
     raise HTTPException(400, "Something went wrong")
@@ -52,8 +62,14 @@ async def post_todos(request: dict) -> dict:
 async def post_todos(request: dict) -> dict:
     query = request["manual_query"]
     loop = asyncio.get_event_loop()
+    query_type = query.split()[0].upper()
+    print(query_type)
+    if query_type in MODTYPES:
+        return await get_by_modify(loop=loop,
+                                    query_type=query_type)
     try:
-        response = await get_by_manual_query(loop=loop, query=query)
+        response = await get_by_manual_query(loop=loop,
+                                            query=query)
     except:
         raise HTTPException(400, "Something went wrong")
 

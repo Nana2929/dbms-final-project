@@ -1,10 +1,11 @@
+#%%
 import asyncio
 import aiomysql
 import dotenv
 from typing import Dict
 from pprint import pprint
 
-env_file_path = '/home/nanaeilish/projects/Github/dbms/dbms-backend/db.env'
+env_file_path = '/home/nanaeilish/projects/dbms/dbms-backend/db.env'
 env: Dict[str, str] = dotenv.dotenv_values(env_file_path)
 pprint(env)
 
@@ -15,35 +16,35 @@ PASSWORD: str = env.get('PASSWORD')
 DBNAME: str = env.get('DBNAME')
 
 # ('Biology Statistics, Survival Analysis', 'Digital', 'Natural Language Processing, Data Mining, Information Retrieval')
+
+ModMap = {
+     'DELETE': (
+        """
+        DELETE
+        FROM Course_Taking as CT
+        WHERE CT.SSN = \'P76114511\' AND CT.Cno = 10;
+        """, ()
+    ),
+    'INSERT': ("""
+        INSERT INTO Course_Taking (Cno, SSN)
+        VALUES (10, \'P76114511\');
+        """, ()
+    ),
+    'UPDATE': (
+        """
+        UPDATE Student
+        SET Name = \'Ching Wen Yang\'
+        WHERE SSN = \'P76114511\'
+        """, ()
+    ),
+}
+
+
 QueryMap = {
     'SELECT': (
         """
         SELECT *
         FROM Department
-        """, ()
-    ),
-    '_DELETE': (
-        """
-        DELETE From
-            Course as C,
-            CourseTaking as CT
-        Where
-            CT.SSN == \'b09104038\'
-            and CT.Cno = C.Cno
-        """, ()
-    ),
-    '_INSERT': ("""
-        INSERT INTO CourseTaking (
-
-        Cno, SSN)
-        VALUES (10, \'P76114511\');
-        """, ()
-    ),
-    '_UPDATE': (
-        """
-        UPDATE Student
-        SET Name = \'Ching Wen Yang\'
-        WHERE SSN = \'P76114511\'
         """, ()
     ),
     'IN': (
@@ -137,6 +138,7 @@ async def get_by_query(
     pool = await aiomysql.create_pool(host=HOST, port=PORT,
                                       user=USER, password=PASSWORD,
                                       db=DBNAME, loop=loop)
+
     async with pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
             await cur.execute(*QueryMap[btn_type])
@@ -146,19 +148,36 @@ async def get_by_query(
     await pool.wait_closed()
     return result
 
-
-async def get_by_manual_query(
+async def get_by_modify(
         loop: asyncio.AbstractEventLoop,
-        query: str):
-    print(f"query: {query}")
+        btn_type: str):
     pool = await aiomysql.create_pool(host=HOST, port=PORT,
                                       user=USER, password=PASSWORD,
                                       db=DBNAME, loop=loop)
     async with pool.acquire() as conn:
         async with conn.cursor(aiomysql.DictCursor) as cur:
-            await cur.execute(query)
-            result = await cur.fetchall()
+            await cur.execute(*ModMap[btn_type])
+            affected = cur.rowcount
+            await conn.commit()
+            await cur.close()
     pool.close()
     await pool.wait_closed()
-    print('manual q:', result)
+    result = [{'affected row count': affected}]
+    return result
+
+async def get_by_manual_query(
+        loop: asyncio.AbstractEventLoop,
+        query: str):
+    pool = await aiomysql.create_pool(host=HOST, port=PORT,
+                                      user=USER, password=PASSWORD,
+                                      db=DBNAME, loop=loop)
+
+    async with pool.acquire() as conn:
+        async with conn.cursor(aiomysql.DictCursor) as cur:
+            await cur.execute(query)
+            result = await cur.fetchall()
+
+    pool.close()
+    await pool.wait_closed()
+    print('manual query:', result)
     return result
