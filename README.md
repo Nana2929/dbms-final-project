@@ -1,4 +1,8 @@
 # dbms-final-project
+## Demo 
+
+https://user-images.githubusercontent.com/58811089/210070961-926cd1d3-150a-4354-9abb-4a34883818d1.mp4
+
 ## Install the required packages 
 1. Frontend: react 
 2. Backend: see `dbms-backend/requirements.txt`
